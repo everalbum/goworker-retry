@@ -25,13 +25,13 @@ func main() {
 
   // Override default settings...
   retryWorker.RetryLimit = 6
-	retryWorker.BackoffStrategy = []int{0, 60, 600, 3600, 10800, 21600} // 0s, 1m, 10m, 1h, 3h, 6h
+  retryWorker.BackoffStrategy = []int{0, 60, 600, 3600, 10800, 21600} // 0s, 1m, 10m, 1h, 3h, 6h
 
-	goworker.Register(myJob, retryWorker.WorkerFunc())
+  goworker.Register(myJob, retryWorker.WorkerFunc())
 
-	if err := goworker.Work(); err != nil {
-		fmt.Println("Error:", err)
-	}
+  if err := goworker.Work(); err != nil {
+    fmt.Println("Error:", err)
+  }
 }
 
 func myWorker(queue string, ...interface{}) error {
