@@ -15,7 +15,6 @@ type exponentialBackoff struct {
 	jobName         string
 	worker          workerFunc
 	RetryLimit      int
-	RetryDelay      int
 	BackoffStrategy []int
 }
 
