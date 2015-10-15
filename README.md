@@ -34,7 +34,7 @@ func main() {
   }
 }
 
-func myWorker(queue string, ...interface{}) error {
+func myWorker(queue string, args ...interface{}) error {
   // Do work...
   return nil
 }
