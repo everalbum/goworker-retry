@@ -29,7 +29,7 @@ func NewBackoff(jobName string, workerFunc func(string, ...interface{}) error) *
 	return eb
 }
 
-func (eb *backoff) WorkerFunc() func(string, ...interface{}) error {
+func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 	return func(queue string, args ...interface{}) error {
 		conn, err := goworker.GetConn()
 		if err != nil {
@@ -94,19 +94,19 @@ func (eb *backoff) WorkerFunc() func(string, ...interface{}) error {
 	}
 }
 
-func (eb *backoff) retryDelay(attempt int) int {
+func (eb backoff) retryDelay(attempt int) int {
 	if attempt > (len(eb.BackoffStrategy) - 1) {
 		attempt = len(eb.BackoffStrategy) - 1
 	}
 	return eb.BackoffStrategy[attempt]
 }
 
-func (eb *backoff) retryKey(args []interface{}) string {
+func (eb backoff) retryKey(args []interface{}) string {
 	parts := []string{"resque", "resque-retry", eb.jobName, eb.retryIdentifier(args)}
 	return strings.Join(parts, ":")
 }
 
-func (eb *backoff) retryIdentifier(args []interface{}) string {
+func (eb backoff) retryIdentifier(args []interface{}) string {
 	params := make([]string, len(args))
 	for i, value := range args {
 		params[i] = fmt.Sprintf("%v", value)
