@@ -15,7 +15,7 @@ go get github.com/everalbum/goworker-retry
 package main
 
 import (
-  "github.com/benmanns/goworker"
+  "github.com/everalbum/goworker"
   "github.com/everalbum/goworker-retry"
 )
 
