@@ -53,8 +53,10 @@ func (eb *backoff) WorkerFunc() func(string, ...interface{}) error {
 
 		// Expire the retry key so we don't leave it hanging
 		// (an hour after it was supposed to be removed)
-		err = eb.worker(queue, args...)
 		redis.Int(conn.Do("EXPIRE", retryKey, eb.retryDelay(retryAttempt)+3600))
+
+		// Run the job
+		err = eb.worker(queue, args...)
 
 		// Success, just clear the retry key
 		if err == nil {
