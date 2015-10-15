@@ -13,12 +13,12 @@ import (
 
 type exponentialBackoff struct {
 	jobName         string
-	worker          workerFunc
+	worker          func(string, ...interface{}) error
 	RetryLimit      int
 	BackoffStrategy []int
 }
 
-func NewExponentialBackoff(jobName string, workerFunc workerFunc) *exponentialBackoff {
+func NewExponentialBackoff(jobName string, workerFunc func(string, ...interface{}) error) *exponentialBackoff {
 	eb := new(exponentialBackoff)
 	eb.jobName = jobName
 	eb.worker = workerFunc
@@ -29,7 +29,7 @@ func NewExponentialBackoff(jobName string, workerFunc workerFunc) *exponentialBa
 	return eb
 }
 
-func (eb *exponentialBackoff) WorkerFunc() workerFunc {
+func (eb *exponentialBackoff) WorkerFunc() func(string, ...interface{}) error {
 	return func(queue string, args ...interface{}) error {
 		conn, err := goworker.GetConn()
 		if err != nil {
@@ -37,7 +37,7 @@ func (eb *exponentialBackoff) WorkerFunc() workerFunc {
 		}
 		defer goworker.PutConn(conn)
 
-		retryKey := eb.retryKey(args)
+		retryKey := eb.retryKey(args...)
 
 		// Create the retry key if not exists
 		_, err = conn.Do("SETNX", retryKey, -1)
@@ -53,7 +53,7 @@ func (eb *exponentialBackoff) WorkerFunc() workerFunc {
 
 		// Expire the retry key so we don't leave it hanging
 		// (an hour after it was supposed to be removed)
-		err = eb.worker(queue, args)
+		err = eb.worker(queue, args...)
 		redis.Int(conn.Do("EXPIRE", retryKey, eb.retryDelay(retryAttempt)+3600))
 
 		// Success, just clear the retry key
@@ -72,11 +72,11 @@ func (eb *exponentialBackoff) WorkerFunc() workerFunc {
 		seconds := eb.retryDelay(retryAttempt)
 		if seconds <= 0 {
 			// If there's no delay, just enqueue it
-			_, err = resque.Enqueue(conn.Conn, queue, eb.jobName, args)
+			_, err = resque.Enqueue(conn.Conn, queue, eb.jobName, args...)
 		} else {
 			// Otherwise schedule it
 			delay := time.Duration(seconds) * time.Second
-			err = resque.EnqueueIn(conn.Conn, delay, queue, eb.jobName, args)
+			err = resque.EnqueueIn(conn.Conn, delay, queue, eb.jobName, args...)
 		}
 
 		if err != nil {
@@ -100,7 +100,7 @@ func (eb *exponentialBackoff) retryDelay(attempt int) int {
 }
 
 func (eb *exponentialBackoff) retryKey(args ...interface{}) string {
-	parts := []string{"resque", "resque-retry", eb.jobName, eb.retryIdentifier(args)}
+	parts := []string{"resque", "resque-retry", eb.jobName, eb.retryIdentifier(args...)}
 	return strings.Join(parts, ":")
 }
 
@@ -114,5 +114,7 @@ func (eb *exponentialBackoff) retryIdentifier(args ...interface{}) string {
 	h.Write([]byte(strings.Join(params, "-")))
 	bs := h.Sum(nil)
 
-	return strings.Replace(fmt.Sprintf("%s", bs), " ", "", -1)
+	hash := fmt.Sprintf("%x", bs)
+
+	return strings.Replace(hash, " ", "", -1)
 }
