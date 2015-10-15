@@ -1,5 +1,7 @@
 # goworker-retry
 
+[![GoDoc](https://godoc.org/github.com/everalbum/goworker-retry?status.svg)](https://godoc.org/github.com/everalbum/goworker-retry)
+
 Exponential backoff retry strategy for use with Resque and
 [goworker](https://www.goworker.org/).
 
