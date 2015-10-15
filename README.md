@@ -1,6 +1,8 @@
 # goworker-retry
 
-Backoff retry strategy for use with Resque and [goworker](https://www.goworker.org/).
+[![GoDoc](https://godoc.org/github.com/everalbum/goworker-retry?status.svg)](https://godoc.org/github.com/everalbum/goworker-retry)
+
+Retry strategy for use with Resque and [goworker](https://www.goworker.org/).
 
 ## Installation
 
