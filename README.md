@@ -1,7 +1,6 @@
 # goworker-retry
 
-Exponential backoff retry strategy for use with Resque and
-[goworker](https://www.goworker.org/).
+Backoff retry strategy for use with Resque and [goworker](https://www.goworker.org/).
 
 ## Installation
 
@@ -21,7 +20,7 @@ import (
 
 func main() {
   myJob := "MyJob"
-  retryWorker := retry.NewExponentialBackoff(myJob, myWorker)
+  retryWorker := retry.NewBackoff(myJob, myWorker)
 
   // Override default settings...
   retryWorker.RetryLimit = 6
