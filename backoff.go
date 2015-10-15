@@ -37,7 +37,7 @@ func (eb *backoff) WorkerFunc() func(string, ...interface{}) error {
 		}
 		defer goworker.PutConn(conn)
 
-		retryKey := eb.retryKey(args...)
+		retryKey := eb.retryKey(args)
 
 		// Create the retry key if not exists
 		_, err = conn.Do("SETNX", retryKey, -1)
@@ -99,12 +99,12 @@ func (eb *backoff) retryDelay(attempt int) int {
 	return eb.BackoffStrategy[attempt]
 }
 
-func (eb *backoff) retryKey(args ...interface{}) string {
-	parts := []string{"resque", "resque-retry", eb.jobName, eb.retryIdentifier(args...)}
+func (eb *backoff) retryKey(args []interface{}) string {
+	parts := []string{"resque", "resque-retry", eb.jobName, eb.retryIdentifier(args)}
 	return strings.Join(parts, ":")
 }
 
-func (eb *backoff) retryIdentifier(args ...interface{}) string {
+func (eb *backoff) retryIdentifier(args []interface{}) string {
 	params := make([]string, len(args))
 	for i, value := range args {
 		params[i] = fmt.Sprintf("%v", value)
