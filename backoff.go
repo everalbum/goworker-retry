@@ -85,7 +85,7 @@ func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 		}
 
 		// Wrap the error
-		return errors.New(fmt.Sprintf("Attempt %d of %d failed: %s", retryAttempt, eb.RetryLimit, workerErr.Error()))
+		return fmt.Errorf("retry: attempt %d of %d failed: %s", retryAttempt, eb.RetryLimit, workerErr.Error())
 	}
 }
 
