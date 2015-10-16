@@ -85,12 +85,8 @@ func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 			return err
 		}
 
-		// NOTE (jonmumm)
-		// By default, if the job failed we suppress errors
-		// and assume we only want to report the error if it
-		// still fails after all of its attempts. This may change
-		// in the future (or be parameterized).
-		return nil
+		// Wrap the error
+		return errors.New(fmt.Sprintf("Attempt %d of %d failed: %s", retryAttempt, eb.RetryLimit, err.Error()))
 	}
 }
 
