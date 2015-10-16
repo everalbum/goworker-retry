@@ -56,41 +56,36 @@ func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 		conn.Do("EXPIRE", retryKey, eb.retryDelay(retryAttempt)+3600)
 
 		// Run the job
-		err = eb.worker(queue, args...)
+		workerErr := eb.worker(queue, args...)
 
 		// Success, just clear the retry key
-		if err == nil {
+		if workerErr == nil {
 			conn.Do("DEL", retryKey)
 			return nil
 		}
 
-		// If we've retried too many times, give up and return the err
 		if retryAttempt >= eb.RetryLimit {
+			// If we've retried too many times, give up
 			conn.Do("DEL", retryKey)
-			return errors.New(fmt.Sprintf("Failed after %d attempts: %s", (retryAttempt + 1), err.Error()))
-		}
-
-		// Schedule the retry attempt
-		seconds := eb.retryDelay(retryAttempt)
-		if seconds <= 0 {
-			// If there's no delay, just enqueue it
-			_, err = resque.Enqueue(conn.Conn, queue, eb.jobName, args...)
 		} else {
-			// Otherwise schedule it
-			delay := time.Duration(seconds) * time.Second
-			err = resque.EnqueueIn(conn.Conn, delay, queue, eb.jobName, args...)
+			// Otherwise schedule the retry attempt
+			seconds := eb.retryDelay(retryAttempt)
+			if seconds <= 0 {
+				// If there's no delay, just enqueue it
+				_, err = resque.Enqueue(conn.Conn, queue, eb.jobName, args...)
+			} else {
+				// Otherwise schedule it
+				delay := time.Duration(seconds) * time.Second
+				err = resque.EnqueueIn(conn.Conn, delay, queue, eb.jobName, args...)
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		if err != nil {
-			return err
-		}
-
-		// NOTE (jonmumm)
-		// By default, if the job failed we suppress errors
-		// and assume we only want to report the error if it
-		// still fails after all of its attempts. This may change
-		// in the future (or be parameterized).
-		return nil
+		// Wrap the error
+		return fmt.Errorf("retry: attempt %d of %d failed: %s", retryAttempt, eb.RetryLimit, workerErr.Error())
 	}
 }
 
