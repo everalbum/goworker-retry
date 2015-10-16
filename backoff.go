@@ -2,7 +2,6 @@ package retry
 
 import (
 	"crypto/sha1"
-	"errors"
 	"fmt"
 	"github.com/everalbum/go-resque"
 	"github.com/everalbum/goworker"
