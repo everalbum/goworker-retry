@@ -105,9 +105,6 @@ func (eb backoff) beginAttempt(retryKey string) (int, error) {
 	return retryAttempt, nil
 }
 
-func (eb backoff) completeAttempt(retryAttempt int, workerErr error) error {
-}
-
 func (eb backoff) retryDelay(attempt int) int {
 	if attempt > (len(eb.BackoffStrategy) - 1) {
 		attempt = len(eb.BackoffStrategy) - 1
