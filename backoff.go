@@ -30,32 +30,23 @@ func NewBackoff(jobName string, workerFunc func(string, ...interface{}) error) *
 
 func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 	return func(queue string, args ...interface{}) error {
+		retryKey := eb.retryKey(args)
+
+		// Setup the attempt
+		retryAttempt, err := eb.beginAttempt(retryKey)
+		if err != nil {
+			return err
+		}
+
+		// Run the job
+		workerErr := eb.worker(queue, args...)
+
+		// Get redis connection
 		conn, err := goworker.GetConn()
 		if err != nil {
 			return err
 		}
 		defer goworker.PutConn(conn)
-
-		retryKey := eb.retryKey(args)
-
-		// Create the retry key if not exists
-		_, err = conn.Do("SETNX", retryKey, -1)
-		if err != nil {
-			return err
-		}
-
-		// Increment the attempt we're on
-		retryAttempt, err := redis.Int(conn.Do("INCR", retryKey))
-		if err != nil {
-			return err
-		}
-
-		// Expire the retry key so we don't leave it hanging
-		// (an hour after it was supposed to be removed)
-		conn.Do("EXPIRE", retryKey, eb.retryDelay(retryAttempt)+3600)
-
-		// Run the job
-		workerErr := eb.worker(queue, args...)
 
 		// Success, just clear the retry key
 		if workerErr == nil {
@@ -86,6 +77,32 @@ func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 		// Wrap the error
 		return fmt.Errorf("retry: attempt %d of %d failed: %s", retryAttempt, eb.RetryLimit, workerErr.Error())
 	}
+}
+
+func (eb backoff) beginAttempt(retryKey string) (int, error) {
+	conn, err := goworker.GetConn()
+	if err != nil {
+		return -1, err
+	}
+	defer goworker.PutConn(conn)
+
+	// Create the retry key if not exists
+	_, err = conn.Do("SETNX", retryKey, -1)
+	if err != nil {
+		return -1, err
+	}
+
+	// Increment the attempt we're on
+	retryAttempt, err := redis.Int(conn.Do("INCR", retryKey))
+	if err != nil {
+		return -1, err
+	}
+
+	// Expire the retry key so we don't leave it hanging
+	// (an hour after it was supposed to be removed)
+	conn.Do("EXPIRE", retryKey, eb.retryDelay(retryAttempt)+3600)
+
+	return retryAttempt, nil
 }
 
 func (eb backoff) retryDelay(attempt int) int {
