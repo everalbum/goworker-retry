@@ -15,6 +15,7 @@ type backoff struct {
 	worker          func(string, ...interface{}) error
 	RetryLimit      int
 	BackoffStrategy []int
+	SaveFailedJob   bool
 }
 
 func NewBackoff(jobName string, workerFunc func(string, ...interface{}) error) *backoff {
@@ -57,6 +58,12 @@ func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 		if retryAttempt >= eb.RetryLimit {
 			// If we've retried too many times, give up
 			conn.Do("DEL", retryKey)
+			if eb.SaveFailedJob {
+				_, err = resque.Failure(conn.Conn, queue, eb.jobName, args...)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 			// Otherwise schedule the retry attempt
 			seconds := eb.retryDelay(retryAttempt)
