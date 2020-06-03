@@ -1,6 +1,6 @@
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/everalbum/go-resque v0.0.0-20151105001433-3577b6872df3 h1:RFv461gfM+YQ1XQgNcENMGcnFUvdmhHJmNY9UGfmaNg=
-github.com/everalbum/go-resque v0.0.0-20151105001433-3577b6872df3/go.mod h1:LQpFxJTp4nzDs4XcrfOg0112EibUaVarGh9iFWIJZiY=
+github.com/everalbum/go-resque v0.0.0-20200603090616-3529cb8c0020 h1:bO56IkXJcVu4XENk2yQhHteTSx0PmF6o+mWxqU7HGSI=
+github.com/everalbum/go-resque v0.0.0-20200603090616-3529cb8c0020/go.mod h1:zPYlEDds8x3cLCdWC0mTs5CaJlmVcDA5pL1adYEXYFA=
 github.com/everalbum/goworker v1.0.0 h1:8hLrV0d/wczH8fj5TnYDL6c+fg7WkmrnwCP9cuf+lQA=
 github.com/everalbum/goworker v1.0.0/go.mod h1:g6zx9HI9tkwjkwL7x/Codh78j3L1e78yginKh+k/17I=
 github.com/garyburd/redigo v1.6.0 h1:0VruCpn7yAIIu7pWVClQC8wxCJEcG3nyzpMSHKi1PQc=
