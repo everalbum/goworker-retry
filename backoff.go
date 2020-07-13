@@ -6,6 +6,7 @@ import (
 	"github.com/everalbum/go-resque"
 	"github.com/everalbum/goworker"
 	"github.com/garyburd/redigo/redis"
+	"github.com/pkg/errors"
 	"strings"
 	"time"
 )
@@ -64,6 +65,8 @@ func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 					return err
 				}
 			}
+			// Wrap an error in order to expose underlying stack traces
+			return errors.Wrap(workerErr, "Final attempt failed")
 		} else {
 			// Otherwise schedule the retry attempt
 			seconds := eb.retryDelay(retryAttempt)
@@ -81,8 +84,8 @@ func (eb backoff) WorkerFunc() func(string, ...interface{}) error {
 			}
 		}
 
-		// Wrap the error
-		return fmt.Errorf("retry: attempt %d of %d failed: %s", retryAttempt, eb.RetryLimit, workerErr.Error())
+		// Create new error in order to ignore underlying stack traces
+		return errors.Errorf("retry: attempt %d of %d failed: %v", retryAttempt, eb.RetryLimit, workerErr)
 	}
 }
 
