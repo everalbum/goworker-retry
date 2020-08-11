@@ -109,8 +109,8 @@ func (eb backoff) beginAttempt(retryKey string) (int, error) {
 	}
 
 	// Expire the retry key so we don't leave it hanging
-	// (an hour after it was supposed to be removed)
-	conn.Do("EXPIRE", retryKey, eb.retryDelay(retryAttempt)+3600)
+	// (a week after it was supposed to be removed)
+	conn.Do("EXPIRE", retryKey, eb.retryDelay(retryAttempt)+3600*24*7)
 
 	return retryAttempt, nil
 }
